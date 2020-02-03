@@ -1,13 +1,21 @@
 import PropTypes from "prop-types";
 import React, { useState } from "react";
-import InvitedContractsContainer from "../invitedContracts/invitedContractsContainer";
+import InvitedContractsContainer from "../invitedContracts/InvitedContractsContainer";
+import QuickFilters from "./QuickFilters";
 
 function ShiftsList({ list }) {
-  const [filter, setFilter, handleChange] = useFilter();
-  const quickFilters = ["Waiting", "Retail", "Barista", "Security"];
+  const [filter, setFilter] = useState("");
+  const [time, setTime] = useState("");
+
+  const clearFilters = () => {
+    setFilter("");
+    setTime("");
+  };
 
   list = list.filter(shift => {
-    if (shift.jobType.startsWith(filter)) return shift;
+    const type = determineAmOrPm(shift.startTime);
+    if (shift.jobType.startsWith(filter) && (type == time || time === ""))
+      return shift;
   });
 
   return (
@@ -15,23 +23,21 @@ function ShiftsList({ list }) {
       <h1>Shifts List</h1>
       <h4>Quick Filters</h4>
       <div>
-        {quickFilters.map(filter => {
-          return (
-            <button type="button" onClick={e => setFilter(filter)}>
-              {filter}
-            </button>
-          );
-        })}
-
-        <button type="button" name="clear" onClick={e => setFilter("")}>
-          Clear Filters
-        </button>
+        <QuickFilters
+          setFilter={setFilter}
+          setTime={setTime}
+          clearFilters={clearFilters}
+        />
+        <p>
+          Filtering for {filter ? "job type: " + filter : null}{" "}
+          {time ? "time: " + time : null}
+        </p>
         <div>
           <label htmlFor="filter">Filter for:</label>
           <input
             name="filter"
             value={filter}
-            onChange={handleChange}
+            onChange={setFilter}
             placeholder="Start filtering"
           />
         </div>
@@ -52,13 +58,8 @@ function ShiftsList({ list }) {
   );
 }
 
-const useFilter = () => {
-  const [filter, setFilter] = useState("");
-  const handleChange = e => {
-    setFilter(e.target.value);
-  };
-
-  return [filter, setFilter, handleChange];
+const determineAmOrPm = timeString => {
+  return timeString.split(":")[0] > 12 ? "PM" : "AM";
 };
 
 ShiftsList.propTypes = {
